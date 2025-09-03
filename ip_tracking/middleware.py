@@ -27,14 +27,36 @@ def save_logs_from_cache():
 
 class LogIPMiddleware(MiddlewareMixin):
     """
-    Middleware to log the IP address, timestamp, and path of every incoming request.
-    This implementation uses a simple caching mechanism to reduce database I/O.
+    Middleware to log and block IP addresses.
     """
+    def __init__(self, get_response=None):
+        super().__init__(get_response)
+        self.get_response = get_response
+        self._load_blocked_ips()
+
+    def _load_blocked_ips(self):
+        """Loads blocked IPs into cache to reduce DB queries."""
+        # Using a simple cache. Consider using Redis for production.
+        blocked_ips = list(BlockedIP.objects.values_list('ip_address', flat=True))
+        cache.set('blocked_ips', blocked_ips, timeout=60 * 60) # Cache for 1 hour
+
     def process_request(self, request):
-        """
-        Process the incoming request to log relevant details.
-        """
-        client_ip, is_routable = get_client_ip(request)
+        client_ip, _ = get_client_ip(request)
+
+        # 1. Check if the IP is blacklisted first
+        if client_ip:
+            blocked_ips = cache.get('blocked_ips')
+            if blocked_ips is None:
+                self._load_blocked_ips()
+                blocked_ips = cache.get('blocked_ips')
+
+            if client_ip in blocked_ips:
+                # Log the attempted access of the blocked IP
+                print(f"Blocked request from {client_ip} to {request.path}")
+                # Return 403 Forbidden response
+                return HttpResponseForbidden("You are not allowed to access this resource.")
+        
+        # 2. If not blacklisted, log the request
         if client_ip:
             log_data = {
                 'ip_address': client_ip,
@@ -43,18 +65,7 @@ class LogIPMiddleware(MiddlewareMixin):
 
             with _cache_lock:
                 _local_cache.append(log_data)
-                # If the cache limit is reached, spawn a new thread to save the logs.
                 if len(_local_cache) >= _cache_limit:
                     threading.Thread(target=save_logs_from_cache).start()
         
-        return None # Proceed to the next middleware or view.
-
-    def process_response(self, request, response):
-        """
-        Ensure any remaining logs are saved before the process completes.
-        This is a safety measure.
-        """
-        # This part might not be strictly necessary for every request but ensures all logs
-        # are saved at shutdown or after every request, depending on a more complex design.
-        # For simplicity and performance, the bulk-save on limit is the main mechanism.
-        return response
+        return None
