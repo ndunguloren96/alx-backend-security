@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'ip_tracking',
-    'ip_geolocation',
+    'django_ip_geolocation',
 ]
 
 MIDDLEWARE = [
