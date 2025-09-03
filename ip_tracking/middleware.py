@@ -6,7 +6,7 @@ from django.http import HttpResponseForbidden
 from django.core.cache import cache
 from ip_tracking.models import RequestLog, BlockedIP
 from ipware import get_client_ip
-from ip_geolocation.utils import get_country_and_city # Import the geolocation utility
+from ip_geolocation import geolocate # Corrected import statement
 import threading
 
 # A local cache for IPs to avoid excessive database writes on very high traffic.
@@ -70,7 +70,10 @@ class LogIPMiddleware(MiddlewareMixin):
             # Use the geolocation utility to get country and city.
             # The library handles internal caching.
             try:
-                country, city = get_country_and_city(client_ip)
+                # Updated code to use the `geolocate` function
+                geolocation_data = geolocate(client_ip)
+                country = geolocation_data.country_code or None
+                city = geolocation_data.city or None
             except Exception as e:
                 # Handle cases where geolocation fails (e.g., private IPs, lookup errors)
                 country, city = None, None
