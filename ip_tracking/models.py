@@ -1,5 +1,3 @@
-# alx-backend-security/ip_tracking/models.py
-
 from django.db import models
 
 class RequestLog(models.Model):
@@ -20,6 +18,18 @@ class RequestLog(models.Model):
         verbose_name="Path",
         help_text="The requested URL path."
     )
+    country = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name="Country"
+    )
+    city = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name="City"
+    )
 
     def __str__(self):
         """
@@ -35,30 +45,31 @@ class RequestLog(models.Model):
 
 class BlockedIP(models.Model):
     """
-    Model to store IP addresses that are blocked from accessing the site.
+    Model to store IP addresses that have been blocked.
     """
     ip_address = models.GenericIPAddressField(
-        unique=True,
         verbose_name="Blocked IP Address",
-        help_text="An IP address that is explicitly blocked."
+        unique=True,
+        help_text="The IP address that has been blocked."
     )
-    reason = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True,
-        verbose_name="Reason for Block",
-        help_text="Reason for blocking this IP, e.g., 'spam bot', 'brute force attack'."
-    )
-    created_at = models.DateTimeField(
+    timestamp = models.DateTimeField(
         auto_now_add=True,
-        verbose_name="Blocked At",
-        help_text="The timestamp when this IP was added to the blacklist."
+        verbose_name="Timestamp",
+        help_text="The time the IP was blocked."
+    )
+    reason = models.TextField(
+        blank=True,
+        verbose_name="Reason for Block",
+        help_text="The reason why this IP address was blocked."
     )
 
     def __str__(self):
-        return f"Blocked IP: {self.ip_address}"
+        """
+        Human-readable representation of the blocked IP.
+        """
+        return f"Blocked: {self.ip_address}"
 
     class Meta:
         verbose_name = "Blocked IP"
         verbose_name_plural = "Blocked IPs"
-        ordering = ['-created_at']
+        ordering = ['-timestamp']

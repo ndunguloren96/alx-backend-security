@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'ip_tracking',
+    'ip_geolocation',
 ]
 
 MIDDLEWARE = [
@@ -131,3 +132,9 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
     }
 }
+
+
+# Configuration for the geolocation database
+GEOIP_PATH = "path/to/your/GeoLite2-City.mmdb"
+# TODO: Download the GeoLite2-City.mmdb database and place it at this path.
+# https://dev.maxmind.com/geoip/geolite2-city-country-databases/?lang=en
