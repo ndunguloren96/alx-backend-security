@@ -139,3 +139,17 @@ CACHES = {
 GEOIP_PATH = "path/to/your/GeoLite2-City.mmdb"
 # TODO: Download the GeoLite2-City.mmdb database and place it at this path.
 # https://dev.maxmind.com/geoip/geolite2-city-country-databases/?lang=en
+
+# Celery Configuration
+CELERY_BROKER_URL = 'redis://localhost:6379/0' # or wherever your Redis is running
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Africa/Nairobi' # Or your timezone
+CELERY_BEAT_SCHEDULE = {
+    'detect-anomalies-hourly': {
+        'task': 'ip_tracking.tasks.detect_anomalies',
+        'schedule': 3600.0, # Run hourly
+    },
+}

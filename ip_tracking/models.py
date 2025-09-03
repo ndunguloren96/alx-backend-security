@@ -73,3 +73,41 @@ class BlockedIP(models.Model):
         verbose_name = "Blocked IP"
         verbose_name_plural = "Blocked IPs"
         ordering = ['-timestamp']
+
+
+class SuspiciousIP(models.Model):
+    """
+    Model to store IP addresses that have been flagged as suspicious.
+    """
+    ip_address = models.GenericIPAddressField(
+        unique=True,
+        verbose_name="Suspicious IP Address",
+        help_text="An IP address flagged for unusual behavior."
+    )
+    reason = models.TextField(
+        verbose_name="Reason for Flag",
+        help_text="The specific unusual behavior detected."
+    )
+    first_detected_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="First Detected At",
+        help_text="The first time this IP was flagged."
+    )
+    last_detected_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Last Detected At",
+        help_text="The most recent time this IP was flagged."
+    )
+
+    def __str__(self):
+        return f"Suspicious IP: {self.ip_address}"
+
+    def save(self, *args, **kwargs):
+        """Update last_detected_at on save."""
+        self.last_detected_at = timezone.now()
+        super().save(*args, **kwargs)
+
+    class Meta:
+        verbose_name = "Suspicious IP"
+        verbose_name_plural = "Suspicious IPs"
+        ordering = ['-last_detected_at']
